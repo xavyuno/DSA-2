@@ -1,0 +1,8 @@
+target/
+.ballerina/
+*.log
+.env.local
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
