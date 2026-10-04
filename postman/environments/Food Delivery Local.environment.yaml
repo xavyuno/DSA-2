@@ -1,0 +1,7 @@
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+name: Food Delivery Local
+variables:
+  - key: baseUrl
+    value: 'http://localhost:8081'
+    type: default
+    enabled: true

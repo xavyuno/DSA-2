@@ -1,0 +1,49 @@
+$kind: http-request
+name: Place Order
+order: 1000
+method: POST
+url: '{{baseUrl}}/orders'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "orderId": "ORD-001",
+      "customerId": "CUST-123",
+      "restaurantId": "REST-456",
+      "items": ["Burger", "Fries", "Coke"],
+      "status": ""
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Test 1: Check the response status code is 200
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      // Test 2: Check the response body has a SUCCESS status
+      pm.test("Response has SUCCESS status", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql("SUCCESS");
+      });
+
+      // Test 3: Check the order status was set to CREATED
+      pm.test("Order status is CREATED", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.orderData.status).to.eql("CREATED");
+      });
+
+      // Test 4: Check the response contains a success message
+      pm.test("Response contains success message", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.message).to.eql("Order placed successfully!");
+      });
+
+      // Test 5: Response time is under 2000ms
+      pm.test("Response time is under 2000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
