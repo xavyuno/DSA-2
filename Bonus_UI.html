@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonus UI - Alex's Restaurant Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 16px;
+            background: #f5f5f5;
+            color: #222;
+        }
+        h1, h2 { margin-bottom: 8px; }
+        .card {
+            background: white;
+            padding: 18px;
+            margin: 16px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 14px;
+        }
+        button {
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 9px;
+            text-align: left;
+        }
+        th { background: #f0f0f0; }
+        .status {
+            white-space: pre-wrap;
+            background: #111;
+            color: #eee;
+            padding: 12px;
+            border-radius: 6px;
+            min-height: 24px;
+        }
+        .small { color: #666; font-size: 14px; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .actions input { width: 90px; }
+    </style>
+</head>
+<body>
+    <h1>Bonus UI</h1>
+    <p><strong>Alex's Restaurant Service & Inventory</strong></p>
+    <p class="small">This is just a small bonus interface for testing my REST API without typing every curl command.</p>
+
+    <div class="card">
+        <h2>Service check</h2>
+        <button onclick="checkHealth()">Check service</button>
+    </div>
+
+    <div class="card">
+        <h2>Create restaurant</h2>
+        <div class="row">
+            <input id="createRestaurantId" placeholder="Restaurant ID e.g. REST-001">
+            <input id="restaurantName" placeholder="Restaurant name">
+            <input id="openingTime" type="time" value="08:00">
+            <input id="closingTime" type="time" value="22:00">
+        </div>
+        <button onclick="createRestaurant()">Create restaurant</button>
+    </div>
+
+    <div class="card">
+        <h2>Work with a restaurant</h2>
+        <div class="row">
+            <input id="restaurantId" value="REST-001" placeholder="Restaurant ID">
+            <button onclick="loadRestaurant()">Load restaurant</button>
+            <button onclick="loadMenu()">Refresh menu / inventory</button>
+        </div>
+        <div id="restaurantDetails" class="small">No restaurant loaded yet.</div>
+    </div>
+
+    <div class="card">
+        <h2>Change opening hours</h2>
+        <div class="row">
+            <input id="newOpeningTime" type="time" value="09:00">
+            <input id="newClosingTime" type="time" value="23:00">
+        </div>
+        <button onclick="updateHours()">Update hours</button>
+    </div>
+
+    <div class="card">
+        <h2>Add menu item</h2>
+        <div class="row">
+            <input id="itemId" placeholder="Item ID e.g. BURGER-01">
+            <input id="itemName" placeholder="Item name">
+            <input id="itemPrice" type="number" min="0" step="0.01" placeholder="Price">
+            <input id="itemStock" type="number" min="0" step="1" placeholder="Stock">
+        </div>
+        <button onclick="addMenuItem()">Add item</button>
+    </div>
+
+    <div class="card">
+        <h2>Menu and inventory</h2>
+        <p class="small">Use the stock box on a row to restock that item. The remove button deletes it from the menu.</p>
+        <div id="menuArea">Load a restaurant's menu to see items here.</div>
+    </div>
+
+    <div class="card">
+        <h2>What happened?</h2>
+        <div id="status" class="status">Ready.</div>
+    </div>
+
+<script>
+const API = "http://localhost:8083/restaurant";
+
+function currentRestaurantId() {
+    return document.getElementById("restaurantId").value.trim();
+}
+
+function showStatus(message) {
+    document.getElementById("status").textContent = message;
+}
+
+async function request(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+        const text = await response.text();
+        let data = text;
+
+        if (text) {
+            try { data = JSON.parse(text); } catch (_) { }
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}${text ? `: ${text}` : ""}`);
+        }
+
+        return data;
+    } catch (error) {
+        showStatus(`Request failed: ${error.message}`);
+        throw error;
+    }
+}
+
+function jsonOptions(method, body) {
+    return {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    };
+}
+
+async function checkHealth() {
+    const result = await request(`${API}/health`);
+    showStatus(String(result));
+}
+
+async function createRestaurant() {
+    const body = {
+        restaurantId: document.getElementById("createRestaurantId").value.trim(),
+        name: document.getElementById("restaurantName").value.trim(),
+        openingTime: document.getElementById("openingTime").value,
+        closingTime: document.getElementById("closingTime").value
+    };
+
+    if (!body.restaurantId || !body.name) {
+        showStatus("Restaurant ID and name are required.");
+        return;
+    }
+
+    const result = await request(`${API}/restaurants`, jsonOptions("POST", body));
+    document.getElementById("restaurantId").value = body.restaurantId;
+    showStatus(`Restaurant created:\n${JSON.stringify(result, null, 2)}`);
+    await loadRestaurant();
+}
+
+async function loadRestaurant() {
+    const id = currentRestaurantId();
+    if (!id) {
+        showStatus("Enter a restaurant ID first.");
+        return;
+    }
+
+    const restaurant = await request(`${API}/restaurants/${encodeURIComponent(id)}`);
+    document.getElementById("restaurantDetails").textContent =
+        `${restaurant.name} | ${restaurant.openingTime} - ${restaurant.closingTime}`;
+    showStatus(`Restaurant loaded:\n${JSON.stringify(restaurant, null, 2)}`);
+    await loadMenu();
+}
+
+async function updateHours() {
+    const id = currentRestaurantId();
+    const body = {
+        openingTime: document.getElementById("newOpeningTime").value,
+        closingTime: document.getElementById("newClosingTime").value
+    };
+
+    const result = await request(
+        `${API}/restaurants/${encodeURIComponent(id)}/hours`,
+        jsonOptions("PUT", body)
+    );
+    showStatus(`Opening hours updated:\n${JSON.stringify(result, null, 2)}`);
+    await loadRestaurant();
+}
+
+async function addMenuItem() {
+    const id = currentRestaurantId();
+    const body = {
+        itemId: document.getElementById("itemId").value.trim(),
+        name: document.getElementById("itemName").value.trim(),
+        price: Number(document.getElementById("itemPrice").value),
+        stock: Number(document.getElementById("itemStock").value)
+    };
+
+    if (!id || !body.itemId || !body.name || Number.isNaN(body.price) || Number.isNaN(body.stock)) {
+        showStatus("Restaurant ID, item ID, name, price and stock are required.");
+        return;
+    }
+
+    const result = await request(
+        `${API}/restaurants/${encodeURIComponent(id)}/menu`,
+        jsonOptions("POST", body)
+    );
+    showStatus(`Menu item added:\n${JSON.stringify(result, null, 2)}`);
+    await loadMenu();
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+async function loadMenu() {
+    const id = currentRestaurantId();
+    if (!id) {
+        showStatus("Enter a restaurant ID first.");
+        return;
+    }
+
+    const items = await request(`${API}/restaurants/${encodeURIComponent(id)}/inventory`);
+    const area = document.getElementById("menuArea");
+
+    if (!items.length) {
+        area.innerHTML = "<p>No menu items yet.</p>";
+        return;
+    }
+
+    const rows = items.map(item => `
+        <tr>
+            <td>${escapeHtml(item.itemId)}</td>
+            <td>${escapeHtml(item.name)}</td>
+            <td>${escapeHtml(item.price)}</td>
+            <td>${escapeHtml(item.stock)}</td>
+            <td>
+                <div class="actions">
+                    <input id="stock-${escapeHtml(item.itemId)}" type="number" min="0" value="${escapeHtml(item.stock)}">
+                    <button onclick="updateStock('${encodeURIComponent(item.itemId)}')">Set stock</button>
+                    <button onclick="removeItem('${encodeURIComponent(item.itemId)}')">Remove</button>
+                </div>
+            </td>
+        </tr>`).join("");
+
+    area.innerHTML = `
+        <table>
+            <thead>
+                <tr><th>Item ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+async function updateStock(encodedItemId) {
+    const id = currentRestaurantId();
+    const itemId = decodeURIComponent(encodedItemId);
+    const stock = Number(document.getElementById(`stock-${itemId}`).value);
+
+    if (!Number.isInteger(stock) || stock < 0) {
+        showStatus("Stock must be a whole number of 0 or more.");
+        return;
+    }
+
+    const result = await request(
+        `${API}/restaurants/${encodeURIComponent(id)}/inventory/${encodedItemId}`,
+        jsonOptions("PUT", { stock })
+    );
+    showStatus(`Stock updated:\n${JSON.stringify(result, null, 2)}`);
+    await loadMenu();
+}
+
+async function removeItem(encodedItemId) {
+    const id = currentRestaurantId();
+    const itemId = decodeURIComponent(encodedItemId);
+    if (!confirm(`Remove ${itemId} from the menu?`)) return;
+
+    const result = await request(
+        `${API}/restaurants/${encodeURIComponent(id)}/menu/${encodedItemId}`,
+        { method: "DELETE" }
+    );
+    showStatus(String(result));
+    await loadMenu();
+}
+</script>
+</body>
+</html>
