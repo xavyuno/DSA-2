@@ -3,7 +3,6 @@ import ballerina/log;
 import ballerina/time;
 import ballerina/uuid;
 
-// In-memory store for payments (lost when the service restarts).
 map<Payment> payments = {};
 
 function nowUtc() returns string => time:utcToString(time:utcNow());
@@ -18,7 +17,6 @@ service /payments on new http:Listener(servicePort) {
         return {status: "UP", 'service: "payment-service"};
     }
 
-    // POST /payments -> mock checkout (always succeeds), then publish the event.
     resource function post .(PaymentRequest req)
             returns http:Created|http:BadRequest|http:InternalServerError {
 
@@ -67,7 +65,6 @@ service /payments on new http:Listener(servicePort) {
         return <http:Created>{body: response};
     }
 
-    // GET /payments/{paymentId}
     resource function get [string paymentId]() returns Payment|http:NotFound {
         Payment? payment = payments[paymentId];
         if payment is () {
