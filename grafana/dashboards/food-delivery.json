@@ -1,0 +1,51 @@
+{
+  "uid": "food-delivery",
+  "title": "Food Delivery Platform",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Orders Created (total)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(orders_created_total)" } ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Orders Failed (total)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(orders_failed_total)" } ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Services UP",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(up{job!=\"prometheus\"})" } ]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Services DOWN",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "count(up{job!=\"prometheus\"} == 0) or vector(0)" } ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Orders per minute",
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "legendFormat": "created", "expr": "sum(rate(orders_created_total[1m])) * 60" },
+        { "refId": "B", "legendFormat": "failed", "expr": "sum(rate(orders_failed_total[1m])) * 60" }
+      ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Service status (1 = up, 0 = down)",
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "up{job!=\"prometheus\"}" } ]
+    }
+  ]
+}

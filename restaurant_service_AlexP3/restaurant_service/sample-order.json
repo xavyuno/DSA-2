@@ -1,0 +1,7 @@
+{
+  "orderId": "ORD-1001",
+  "customerId": "CUST-001",
+  "restaurantId": "REST-001",
+  "items": ["BURGER-01", "BURGER-01", "CHIPS-01"],
+  "status": "CREATED"
+}

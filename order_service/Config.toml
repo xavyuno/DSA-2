@@ -1,0 +1,13 @@
+# Used inside Docker Compose (service names are the hostnames)
+mongoHost = "mongodb"
+mongoPort = 27017
+dbName = "order_db"
+kafkaBootstrap = "kafka:9092"
+
+[ballerina.observe]
+metricsEnabled = true
+metricsReporter = "prometheus"
+
+[ballerinax.prometheus]
+port = 9797
+host = "0.0.0.0"
