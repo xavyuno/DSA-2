@@ -1,9 +1,28 @@
 import ballerinax/kafka;
+import ballerina/io;
 
-kafka:ConsumerConfiguration consumerConfiguration = {
-    groupId: "group-id",
-    offsetReset: "earliest", 
-    topics: ["kafka-topic"]
+final kafka:ConsumerConfiguration consumerConfig = {
+    groupId: kafkaGroupId,
+    offsetReset: "earliest",
+    topics: ["orders.created"]
 };
 
-kafka:Consumer kafkaConsumer = check new (kafka:DEFAULT_URL, consumerConfiguration);
+final kafka:Consumer orderConsumer = check new (kafkaBroker, consumerConfig);
+
+function runConsumer() returns error? {
+    while true {
+        kafka:AnydataConsumerRecord[] records = check orderConsumer->poll(1);
+
+        foreach kafka:AnydataConsumerRecord consumerRecord in records {
+            byte[] valueBytes = check consumerRecord.value.ensureType();
+            string payload = check string:fromBytes(valueBytes);
+            io:println("Received: ", payload);
+
+            json eventJson = check payload.fromJsonString();
+            OrderCreatedEvent event = check eventJson.cloneWithType(OrderCreatedEvent);
+
+            check incrementRestaurantOrderCount(event.restaurantId);
+            io:println("Updated count for restaurant ", event.restaurantId);
+        }
+    }
+}

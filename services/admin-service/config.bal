@@ -1,4 +1,4 @@
 configurable string kafkaBroker = "localhost:9092";
 configurable string mongoUri = "mongodb://localhost:27017";
-configurable string adminGroupId = "admin-service-group";
+configurable string kafkaGroupId = "admin-service-group";
 configurable int adminPort = 8087;

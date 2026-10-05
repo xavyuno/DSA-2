@@ -1,7 +1,14 @@
-# DSA-2
-### Distributed Food Delivery Platform
+# Distributed Food Delivery Platform (DSA612S)
 
-Prerequisites: Docker Desktop with WSL 2, Git, Ballerina, MongoDB Compass
+A microservices-based food delivery platform built with Ballerina, Kafka, and MongoDB.
 
-### how to run:
-``cmd:``docker compose up
+## Prerequisites
+
+- Docker Desktop with WSL 2 (Windows 11)
+- Ballerina Swan Lake
+- MongoDB Compass (optional, for inspecting data)
+
+## How to Run
+
+```powershell
+docker compose up --build

@@ -1,8 +1,8 @@
 [package]
-org = "xavie"
+org = "food_delivery"
 name = "admin_service"
-version = "0.1.0"
-distribution = "2201.13.5"
+version = "1.2.0"
+distribution = "2201.9.0"
 
 [build-options]
 observabilityIncluded = true

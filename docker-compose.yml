@@ -1,15 +1,4 @@
 services:
-  admin-service:
-    build:
-      context: ./services/admin-service
-    ports:
-      - "8087:8087"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      MONGO_URI: mongodb://mongodb:27017
-    depends_on:
-      - kafka
-      - mongodb
   kafka:
     image: apache/kafka:latest
     container_name: broker
@@ -36,6 +25,30 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+
+  order-service:
+    build:
+      context: ./services/order-service
+    ports:
+      - "8081:8081"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      MONGO_URI: mongodb://mongodb:27017
+    depends_on:
+      - kafka
+      - mongodb
+
+  admin-service:
+    build:
+      context: ./services/admin-service
+    ports:
+      - "8087:8087"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      MONGO_URI: mongodb://mongodb:27017
+    depends_on:
+      - kafka
+      - mongodb
 
 volumes:
   mongo_data:
