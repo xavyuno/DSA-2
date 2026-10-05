@@ -26,14 +26,29 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  order-service:
+  customer-service:
     build:
-      context: ./services/order-service
+      context: ./services/customer-service
     ports:
-      - "8081:8081"
+      - "8085:8085"
     environment:
-      KAFKA_BROKER: kafka:9092
-      MONGO_URI: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_SERVICEPORT: 8085
+      BAL_CONFIG_VAR_MONGOURL: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_MONGODATABASE: food_delivery
+    depends_on:
+      - kafka
+      - mongodb
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+    ports:
+      - "8082:8082"
+    environment:
+      BAL_CONFIG_VAR_SERVICEPORT: 8082
+      BAL_CONFIG_VAR_KAFKABOOTSTRAPSERVERS: kafka:9092
+      BAL_CONFIG_VAR_PAYMENTSCOMPLETEDTOPIC: payments.completed
+      BAL_CONFIG_VAR_KAFKACLIENTID: payment-service
     depends_on:
       - kafka
       - mongodb
@@ -44,8 +59,11 @@ services:
     ports:
       - "8087:8087"
     environment:
-      KAFKA_BROKER: kafka:9092
-      MONGO_URI: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_ADMINPORT: 8087
+      BAL_CONFIG_VAR_KAFKABROKER: kafka:9092
+      BAL_CONFIG_VAR_MONGOURI: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_KAFKAGROUPID: admin-service-group
+      BAL_CONFIG_VAR_ORDERSCREATEDTOPIC: orders.created
     depends_on:
       - kafka
       - mongodb

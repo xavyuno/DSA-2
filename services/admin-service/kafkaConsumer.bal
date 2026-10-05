@@ -4,7 +4,7 @@ import ballerina/io;
 final kafka:ConsumerConfiguration consumerConfig = {
     groupId: kafkaGroupId,
     offsetReset: "earliest",
-    topics: ["orders.created"]
+    topics: [ordersCreatedTopic]
 };
 
 final kafka:Consumer orderConsumer = check new (kafkaBroker, consumerConfig);

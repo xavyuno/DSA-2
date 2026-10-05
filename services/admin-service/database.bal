@@ -13,7 +13,7 @@ isolated function incrementRestaurantOrderCount(string restaurantId) returns err
 
     if existing is RestaurantStats {
         int newCount = existing.orderCount + 1;
-        mongodb:UpdateResult result = check collection->updateOne(
+        _ = check collection->updateOne(
             {restaurantId: restaurantId},
             {set: {orderCount: newCount}}
         );
@@ -28,15 +28,12 @@ isolated function incrementRestaurantOrderCount(string restaurantId) returns err
 
 isolated function getAllRestaurantStats() returns RestaurantStats[]|error {
     mongodb:Collection collection = check getStatsCollection();
-    stream<RestaurantStats, error?>|error results = collection->find({});
-
-    if results is error {
-        return results;
-    }
-
     RestaurantStats[] list = [];
-    foreach RestaurantStats s in results {
-        list.push(s);
-    }
+
+    stream<RestaurantStats, error?> results = check collection->find({});
+    check from RestaurantStats s in results
+        do {
+            list.push(s);
+        };
     return list;
 }
