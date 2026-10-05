@@ -64,10 +64,36 @@ services:
         done
     networks: [food-net]
 
+<<<<<<< HEAD
   # ---------- Order Service (your part) ----------
   order-service:
     build: ./order-service
     container_name: order-service
+=======
+  customer-service:
+    build:
+      context: ./services/customer-service
+    ports:
+      - "8085:8085"
+    environment:
+      BAL_CONFIG_VAR_SERVICEPORT: 8085
+      BAL_CONFIG_VAR_MONGOURL: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_MONGODATABASE: food_delivery
+    depends_on:
+      - kafka
+      - mongodb
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+    ports:
+      - "8082:8082"
+    environment:
+      BAL_CONFIG_VAR_SERVICEPORT: 8082
+      BAL_CONFIG_VAR_KAFKABOOTSTRAPSERVERS: kafka:9092
+      BAL_CONFIG_VAR_PAYMENTSCOMPLETEDTOPIC: payments.completed
+      BAL_CONFIG_VAR_KAFKACLIENTID: payment-service
+>>>>>>> fb44aaae5679988d97e7c02c83fba6c2e6bf567d
     depends_on:
       mongodb:
         condition: service_healthy
@@ -106,12 +132,20 @@ services:
     ports:
       - "3000:3000"
     environment:
+<<<<<<< HEAD
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+=======
+      BAL_CONFIG_VAR_ADMINPORT: 8087
+      BAL_CONFIG_VAR_KAFKABROKER: kafka:9092
+      BAL_CONFIG_VAR_MONGOURI: mongodb://mongodb:27017
+      BAL_CONFIG_VAR_KAFKAGROUPID: admin-service-group
+      BAL_CONFIG_VAR_ORDERSCREATEDTOPIC: orders.created
+>>>>>>> fb44aaae5679988d97e7c02c83fba6c2e6bf567d
     depends_on:
       - prometheus
     networks: [food-net]

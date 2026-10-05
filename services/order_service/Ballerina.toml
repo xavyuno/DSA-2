@@ -1,0 +1,11 @@
+[package]
+org = "bonez"
+name = "order_service"
+version = "0.1.0"
+distribution = "2201.13.5"
+
+[dependencies]
+"ballerinax/kafka" = "3.13.0"
+
+[build-options]
+observabilityIncluded = true
