@@ -1,0 +1,25 @@
+# ---------------------------------------------------------------------------
+# Ballerina.toml  -  the "project file" for the Customer Service.
+# It tells Ballerina the package name/version and which libraries we use.
+# ---------------------------------------------------------------------------
+[package]
+org = "dsa612s"
+name = "customer_service"
+version = "0.1.0"
+distribution = "2201.10.3"
+
+[build-options]
+observabilityIncluded = false
+
+# Libraries (dependencies) used by this service.
+# ballerina/http      -> lets us build a REST API
+# ballerinax/mongodb  -> lets us talk to the MongoDB database
+[[dependency]]
+org = "ballerina"
+name = "http"
+version = "2.12.0"
+
+[[dependency]]
+org = "ballerinax"
+name = "mongodb"
+version = "5.0.0"
